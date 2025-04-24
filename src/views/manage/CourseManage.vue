@@ -265,24 +265,33 @@ const openModifyChapterModal = async (id: number) => {
 };
 // 提交章节修改
 const submitChapterModify = async () => {
-  data.submitChapterModifyLoading = true;
-  const res = await modifyChapter(data.currentChapterId, data.chapterForm);
-  if (res.status === 0) {
-    ElMessage({
-      message: "章节修改成功",
-      type: "success",
-      plain: true,
-    });
+  await chapterModifyFormRef.value.validate();
+  if (data.isUploadComplete && data.isSupplementComplete) {
+    data.submitChapterModifyLoading = true;
+    const res = await modifyChapter(data.currentChapterId, data.chapterForm);
+    if (res.status === 0) {
+      ElMessage({
+        message: "章节修改成功",
+        type: "success",
+        plain: true,
+      });
+    } else {
+      ElMessage({
+        message: "章节修改失败",
+        type: "error",
+        plain: true,
+      });
+    }
+    data.submitChapterModifyLoading = false;
+    data.modifyChapterModalVisible = false;
+    searchChapter();
   } else {
     ElMessage({
-      message: "章节修改失败",
+      message: "请等待文件上传完成！",
       type: "error",
       plain: true,
     });
   }
-  data.submitChapterModifyLoading = false;
-  data.modifyChapterModalVisible = false;
-  searchChapter();
 };
 // 章节分页
 const chapterSizeChange = (val: any) => {
@@ -489,6 +498,7 @@ const handleSuccessModifySupplement = (res: any, file: any) => {
       file_id: res.data.file_id,
     },
   ];
+  data.isSupplementComplete = true;
 };
 
 // 下载文件
@@ -497,6 +507,7 @@ const downloadFile = (fileUrl: string) => {
 };
 // 创建新章节表单引用
 const chapterFormRef = ref(null);
+const chapterModifyFormRef = ref(null);
 // 表单校验数据
 const chapterRules = reactive({
   name: [
@@ -905,9 +916,15 @@ onMounted(async () => {
     center
   >
     <div class="course-dialog">
-      <el-form :model="data.chapterForm" label-width="auto" class="w-[30rem]">
+      <el-form
+        :model="data.chapterForm"
+        label-width="auto"
+        class="w-[30rem]"
+        ref="chapterModifyFormRef"
+        :rules="chapterRules"
+      >
         <!-- 章节名 -->
-        <el-form-item label="名称">
+        <el-form-item label="名称" prop="name">
           <el-input
             v-model="data.chapterForm.name"
             placeholder="请输入章节名称(不能超过30个字)"
@@ -923,7 +940,7 @@ onMounted(async () => {
           </el-input>
         </el-form-item>
         <!-- 章节描述 -->
-        <el-form-item label="描述">
+        <el-form-item label="描述" prop="desc">
           <el-input
             v-model="data.chapterForm.desc"
             placeholder="请输入章节描述(不能超过500个字)"
@@ -941,7 +958,7 @@ onMounted(async () => {
           </el-input>
         </el-form-item>
         <!-- 镜像 -->
-        <el-form-item label="镜像">
+        <el-form-item label="镜像" prop="image_id">
           <el-select
             v-model="data.chapterForm.image_id"
             placeholder="请选择镜像"
@@ -961,7 +978,7 @@ onMounted(async () => {
           </el-select>
         </el-form-item>
         <!-- 课时 -->
-        <el-form-item label="课时">
+        <el-form-item label="课时" prop="use_time">
           <el-input
             v-model="data.chapterForm.use_time"
             placeholder="请输入课时"
@@ -975,7 +992,7 @@ onMounted(async () => {
           </el-input>
         </el-form-item>
         <!-- 章节内容 -->
-        <el-form-item>
+        <el-form-item prop="files_info">
           <el-upload
             drag
             class="w-[30rem]"
@@ -1006,7 +1023,7 @@ onMounted(async () => {
             drag
             :action="data.fileUploadUrl"
             :on-remove="handleRemoveModifySupplement"
-            :before-remove="beforeRemove"
+            :before-remove="beforeRemoveSupplement"
             :limit="data.fileLimit"
             :on-exceed="handleExceed"
             :file-list="data.chapterForm.supplement_files_info"
