@@ -316,6 +316,7 @@ const searchCourse = async () => {
 };
 // 提交课程创建
 const submitCourseCreate = async () => {
+  await courseFormRef.value.validate();
   data.submitCourseCreateLoading = true;
   const res = await createCourse(data.newCourseForm);
   if (res.status === 0) {
@@ -348,6 +349,7 @@ const openCourseModifyModal = async (courseId: number) => {
 };
 // 提交课程修改
 const submitCourseModify = async () => {
+  await courseModifyFormRef.value.validate();
   data.submitCourseModifyLoading = true;
   const res = await modifyCourse(data.courseForm.id, data.courseForm);
   if (res.status === 0) {
@@ -508,6 +510,8 @@ const downloadFile = (fileUrl: string) => {
 // 创建新章节表单引用
 const chapterFormRef = ref(null);
 const chapterModifyFormRef = ref(null);
+const courseFormRef = ref(null);
+const courseModifyFormRef = ref(null);
 // 表单校验数据
 const chapterRules = reactive({
   name: [
@@ -546,11 +550,41 @@ const chapterRules = reactive({
     },
   ],
 });
+const courseRules = reactive({
+  name: [
+    { required: true, message: "请输入课程名称", trigger: "blur" },
+    { min: 2, max: 30, message: "长度在2到30个字符", trigger: "blur" },
+  ],
+  desc: [
+    { required: true, message: "请输入课程描述", trigger: "blur" },
+    { min: 10, max: 500, message: "长度在10到500个字符", trigger: "blur" },
+  ],
+});
+
 // 创建新章节对话框关闭
 const handleCreateChapterModalClose = () => {
   // 重置表单校验状态
   if (chapterFormRef.value) {
     chapterFormRef.value.resetFields();
+  }
+};
+// 修改新章节对话框关闭
+const handleModifyChapterModalClose = () => {
+  // 重置表单校验状态
+  if (chapterModifyFormRef.value) {
+    chapterModifyFormRef.value.resetFields();
+  }
+};
+const handleCreateCourseModalClose = () => {
+  // 重置表单校验状态
+  if (courseFormRef.value) {
+    courseFormRef.value.resetFields();
+  }
+};
+const handleModifyCourseModalClose = () => {
+  // 重置表单校验状态
+  if (courseModifyFormRef.value) {
+    courseModifyFormRef.value.resetFields();
   }
 };
 
@@ -914,6 +948,7 @@ onMounted(async () => {
     title="章节修改"
     width="600"
     center
+    @close="handleModifyChapterModalClose"
   >
     <div class="course-dialog">
       <el-form
@@ -1061,11 +1096,17 @@ onMounted(async () => {
     title="课程创建"
     width="600"
     center
+    @close="handleCreateCourseModalClose"
   >
     <div class="course-dialog">
-      <el-form :model="data.newChapterForm" class="w-[30rem]">
+      <el-form
+        :model="data.newCourseForm"
+        class="w-[30rem]"
+        ref="courseFormRef"
+        :rules="courseRules"
+      >
         <!-- 课程名 -->
-        <el-form-item>
+        <el-form-item prop="name">
           <el-input
             v-model="data.newCourseForm.name"
             placeholder="请输入课程名称(不能超过30个字)"
@@ -1081,14 +1122,13 @@ onMounted(async () => {
           </el-input>
         </el-form-item>
         <!-- 描述 -->
-        <el-form-item>
+        <el-form-item prop="desc">
           <el-input
             v-model="data.newCourseForm.desc"
             placeholder="请输入课程描述(不能超过500个字)"
             :autosize="{ minRows: 2, maxRows: 4 }"
             type="textarea"
-            maxlength="500"
-            show-word-limit="true"
+            show-word-limit
           >
             <!-- 图标 -->
             <template #prefix>
@@ -1118,11 +1158,18 @@ onMounted(async () => {
     title="课程修改"
     width="600"
     center
+    @close="handleModifyCourseModalClose"
   >
     <div class="course-dialog">
-      <el-form :model="data.courseForm" label-width="auto" class="w-[30rem]">
+      <el-form
+        :model="data.courseForm"
+        label-width="auto"
+        class="w-[30rem]"
+        ref="courseModifyFormRef"
+        :rules="courseRules"
+      >
         <!-- 课程名 -->
-        <el-form-item label="课程名称">
+        <el-form-item label="课程名称" prop="name">
           <el-input
             v-model="data.courseForm.name"
             placeholder="请输入课程名称(不能超过30个字)"
@@ -1138,7 +1185,7 @@ onMounted(async () => {
           </el-input>
         </el-form-item>
         <!-- 描述 -->
-        <el-form-item label="描述">
+        <el-form-item label="描述" prop="desc">
           <el-input
             v-model="data.courseForm.desc"
             placeholder="请输入课程描述(不能超过500个字)"
