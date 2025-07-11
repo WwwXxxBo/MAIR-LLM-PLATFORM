@@ -6,7 +6,7 @@ import { useRouter } from 'vue-router'
 import { getClassOptions } from '@/apis/class';
 import { getExamInfoList, createExam, deleteExam, getExamDetail } from '@/apis/exam';
 import { getExamPaperList, createExamPaper, getExamPaperDetail, modifyExamPaper, deleteExamPaper, getExamPaperOptions } from '@/apis/examPaper';
-import { getExamQuestionList, getExamQuestionDetail, createQuestion, getQuestionRelation, getQuestionOptions, createQuestionRelation, deleteQuestionRelation, modifyQuestion } from '@/apis/examQuestion';
+import { getExamQuestionList, getExamQuestionDetail, createQuestion, getQuestionRelation, getQuestionOptions, createQuestionRelation, deleteQuestionRelation, modifyQuestion, autoCreateQuestion } from '@/apis/examQuestion';
 import { getExamResultList } from '@/apis/examResult';
 
 const router = useRouter();
@@ -48,6 +48,9 @@ const data = reactive({
     status_desc: '',
     type: 0,
     type_desc: '',
+  },
+  autoCreateQuestionForm: {
+    input: "",
   },
   examPaperForm: {
     create_time: 0,
@@ -114,6 +117,7 @@ const data = reactive({
   createExamModalVisible: false,
   checkExamDetailModalVisible: false,
   modifyQuestionModalVisible: false,
+  autoCreateQuestionModalVisible: false,
   // 类型
   typeOptions: [
     {
@@ -175,6 +179,7 @@ const data = reactive({
   removeExamPaperQuestionLoading: false,
   searchCurrentExamQuestionLoading: false,
   submitExamCreateLoading: false,
+  autoCreateExamQuestionLoading: false,
 })
 
 // 搜索试题
@@ -348,6 +353,27 @@ const currentExamQuestionSizeChange = (val: any) => {
 const currentExamQuestionCurrentChange = (val: any) => {
   data.currentExamPaperQuestionPage = val;
   searchCurrentExamQuestion();
+}
+// 智能出题
+const autoCreateExamQuestion = async () => {
+  data.autoCreateExamQuestionLoading = true;
+  const res = await autoCreateQuestion(data.autoCreateQuestionForm.input);
+  if(res.status === 0){
+    ElMessage({
+      message: '智能出题成功',
+      type: 'success',
+      plain: true,
+    })
+  } else {
+    ElMessage({
+      message: '智能出题失败',
+      type: 'error',
+      plain: true,
+    })
+  }
+  data.autoCreateQuestionForm.input = "";
+  data.autoCreateExamQuestionLoading = false;
+  data.autoCreateQuestionModalVisible = false;
 }
 
 // 查看试题详情
@@ -693,6 +719,7 @@ onMounted(() => {
             <el-input v-model="data.inputExamQuestion" class="mr-3 w-[30vw] h-[2rem]" placeholder="请输入试题内容" />
             <el-button type="primary" class="mr-3 h-[2rem]" @click="searchExamQuestion()" :loading="data.searchExamQuestionLoading">搜索</el-button>
             <el-button type="primary" class="mr-3 h-[2rem]" @click="data.createQuestionModalVisible = true">创建新试题</el-button>
+            <el-button type="primary" class="mr-3 h-[2rem]" @click="data.autoCreateQuestionModalVisible = true">智能出题</el-button>
           </div>
         </div>
         <!-- 所有试题信息展示 -->
@@ -1049,6 +1076,35 @@ onMounted(() => {
     </div>
   </el-dialog>
 
+    <!-- 创建试题框 -->
+  <el-dialog v-model="data.autoCreateQuestionModalVisible" title="智能出题" width="600" center>
+    <div class="exam-dialog">
+      <el-form :model="data.autoCreateQuestionForm" label-width="auto" class="w-[30rem]">
+        <!-- 内容 -->
+        <el-form-item label="内容">
+          <el-input 
+            v-model="data.autoCreateQuestionForm.input" 
+            placeholder="请输入题目内容(不能超过250个字)"
+            show-word-limit="true"
+            maxlength="250"
+            type="textarea"
+          >
+            <!-- 图标 -->
+            <template #prefix>
+              <el-icon color="#409efc" class="no-inherit">
+                <Document />
+              </el-icon>
+            </template>
+          </el-input>
+        </el-form-item>
+        <!-- 创建按钮 -->
+        <el-form-item>
+          <el-button class="w-[30rem]" type="primary" @click="autoCreateExamQuestion()" :loading="data.autoCreateExamQuestionLoading">AI出题</el-button>
+        </el-form-item>
+      </el-form>
+    </div>
+  </el-dialog>
+
   <!-- 修改试题框 -->
   <el-dialog v-model="data.modifyQuestionModalVisible" title="修改试题" width="600" center>
     <div class="exam-dialog">
@@ -1057,9 +1113,10 @@ onMounted(() => {
         <el-form-item label="内容">
           <el-input 
             v-model="data.modifyQuestionForm.content" 
-            placeholder="请输入题目内容(不能超过20个字)"
+            placeholder="请输入题目内容(不能超过250个字)"
             show-word-limit="true"
-            maxlength="20"
+            maxlength="250"
+            type="textarea"
           >
             <!-- 图标 -->
             <template #prefix>
@@ -1148,7 +1205,7 @@ onMounted(() => {
           </el-form-item>
           <el-form-item>
             <el-checkbox-group v-model="data.modifyQuestionForm.right_answer">
-              <el-checkbox v-for="(option, index) in data.modifyQuestionForm.answer_option" :key="index" :label="(index+1).toString()" :value="option">
+              <el-checkbox v-for="(option, index) in data.modifyQuestionForm.answer_option" :key="index" :label="(index+1).toString()" >
                 {{ option }}
               </el-checkbox>
             </el-checkbox-group>

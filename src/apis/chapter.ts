@@ -1,4 +1,5 @@
 import { httpInstance } from '@/utils/http-util'
+import { id } from 'element-plus/es/locales.mjs'
 
 // 获取章节列表
 export const getChapterList = (searchText: string, page: number, count: number) => {
@@ -54,7 +55,17 @@ export const modifyChapter = (id: number, form: object) => {
     withCredentials: true
   })
 }
-
+// 删除章节
+export const deletChapter=(id:number)=>{
+  return httpInstance({
+     url:'/subcourse/' + id + '/',
+    method: "DELETE",
+    headers: {
+      "content-type": "application/json",
+    },
+    withCredentials: true
+  })
+}
 // 获取章节选项
 export const getChapterOption = () => {
   return httpInstance({

@@ -256,14 +256,9 @@ const studyProgressCurrentChange = (val: any) => {
 }
 
 // 进入实验
-const openExperiment = () => {
+const openExperiment = (url: string) => {
   data.experimentDetailModalVisible = false
-  if(data.userName === "马小军"){
-    window.open('http://8.155.19.142:30048/lab?');
-  } else {
-    window.open('http://8.155.19.142:30049/lab?');
-  }
-  
+  window.open('http://8.155.19.142:30048/lab?');  
 }
 
 // 下载文件
@@ -450,11 +445,11 @@ onMounted( async () => {
         <!-- 右侧固定列 展示详情信息 -->
         <el-table-column fixed="right" label="操作" min-width="200" show-overflow-tooltip>
           <template v-slot="scope">
-            <el-button v-if="!scope.row.name.startsWith('大数据')" link type="primary" size="small" @click="openExperiment()">进入实验</el-button>
+            <el-button v-if="!scope.row.name.startsWith('大数据')" link type="primary" size="small" @click="openExperiment(scope.row.container_url)">进入实验</el-button>
             <el-button v-if="userStore.roleId <= 1" link type="primary" size="small"  @click="openStudyProgressModal(scope.row.id)">学习进度</el-button>
             <el-button link type="primary" size="small" @click="openStuReport(data.currentExperimentId, scope.row.subcourse_id)">学习报告</el-button>
             <el-button link type="primary" size="small"
-            @click="createNewContainer(scope.row.subcourse_id)">创建容器</el-button>
+            v-if="scope.row.container_url" @click="createNewContainer(scope.row.subcourse_id)">创建容器</el-button>
           </template>
         </el-table-column>
       </el-table>

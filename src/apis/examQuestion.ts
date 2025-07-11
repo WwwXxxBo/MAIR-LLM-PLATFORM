@@ -113,3 +113,18 @@ export const modifyQuestion = (id: number, form: object) => {
     withCredentials: true
   })
 }
+
+// 智能出题
+export const autoCreateQuestion = (text: string) => {
+  return httpInstance({
+    url: '/autoquestionapi/',
+    method: "POST",
+    data: {
+      text: text
+    },
+    headers: {
+      "content-type": "application/json",
+    },
+    withCredentials: true
+  })
+}

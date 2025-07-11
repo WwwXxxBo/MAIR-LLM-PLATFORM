@@ -15,6 +15,7 @@ import {
   getChapterDetail,
   modifyChapter,
   getChapterOption,
+  deletChapter,
   deleteFile,
 } from "@/apis/chapter";
 import {
@@ -120,8 +121,10 @@ const searchChapter = async () => {
   );
   data.chapterListLoading = false;
   data.chapterList = res.data.list;
+
   data.chapterTotal = res.data.total;
   data.searchChapterLoading = false;
+  
 };
 // 打开章节创建模态框
 const openChapterCreateModal = async () => {
@@ -129,6 +132,7 @@ const openChapterCreateModal = async () => {
   const res = await getImageOptions();
   data.imageOptions = res.data.list;
 };
+
 // 提交章节创建
 const submitChapterCreate = async () => {
   await chapterFormRef.value.validate();
@@ -263,6 +267,61 @@ const openModifyChapterModal = async (id: number) => {
   const imageOptionsRes = await getImageOptions();
   data.imageOptions = imageOptionsRes.data.list;
 };
+// 删除章节
+// const deleteCourseChapter = async (id:number)=>{
+//     const res=await deletChapter(id);
+//     data.removeCourseChapterLoading=true;
+    
+//     if(res.status===0){
+//       ElMessage({
+//         message: "章节删除成功",
+//         type:"success",
+//         plain:true
+//       });
+//       await searchChapter()
+//     }else{
+//       ElMessage({
+//         message: "章节删除失败",
+//         type:"error",
+//         plain:true
+//     })
+// }
+// data.removeCourseChapterLoading=false
+   
+// }
+// 删除章节
+const deleteCourseChapter = async (id: number) => {
+  data.removeCourseChapterLoading = true; // Set loading to true before API call
+  try {
+    const res = await deletChapter(id);
+    if (res.status === 0) {
+      ElMessage({
+        message: "章节删除成功",
+        type: "success",
+        plain: true,
+      });
+      // Call searchChapter() after successful deletion to refresh the list
+      await searchChapter();
+
+    } else {
+      ElMessage({
+        message: "章节删除失败",
+        type: "error",
+        plain: true,
+      });
+    }
+  } catch (error) {
+    ElMessage({
+      message: "章节删除失败",
+      type: "error",
+      plain: true,
+    });
+    console.error("Error deleting chapter:", error);
+  } finally {
+    data.removeCourseChapterLoading = false; // Always set loading to false after the operation
+    console.log(data.chapterList)
+  }
+};
 // 提交章节修改
 const submitChapterModify = async () => {
   await chapterModifyFormRef.value.validate();
@@ -347,6 +406,7 @@ const openCourseModifyModal = async (courseId: number) => {
   data.courseForm.modify_time = res.data.modify_time;
   data.courseForm.total_time = res.data.total_time;
 };
+
 // 提交课程修改
 const submitCourseModify = async () => {
   await courseModifyFormRef.value.validate();
@@ -680,6 +740,14 @@ onMounted(async () => {
                   size="small"
                   @click="openModifyChapterModal(scope.row.id)"
                   >修改</el-button
+                >
+                <el-button
+                  link
+                  type="primary"
+                  size="small"
+                  @click="deleteCourseChapter(scope.row.id)"
+                
+                  >删除</el-button
                 >
               </template>
             </el-table-column>

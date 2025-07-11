@@ -18,7 +18,7 @@ const { aboutUsVisible, settingVisible } = toRefs(data)
 
 // 打开对话框
 const openLLMWindow = () => {
-  window.open(`http://8.155.19.142:30035/`);
+  window.open(`http://8.155.19.142:30044/`);
 }
 // 退出系统
 const quit = () => {
